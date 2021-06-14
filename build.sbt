@@ -1,12 +1,12 @@
 // See README.md for license details.
 
-ThisBuild / scalaVersion     := "2.12.13"
-ThisBuild / version          := "0.1.0"
-ThisBuild / organization     := "%ORGANIZATION%"
+scalaVersion     := "2.12.13"
+version          := "0.1.0"
+organization     := "Molmock Inc"
 
 lazy val root = (project in file("."))
   .settings(
-    name := "%NAME%",
+    name := "CIC",
     libraryDependencies ++= Seq(
       "edu.berkeley.cs" %% "chisel3" % "3.4.3",
       "edu.berkeley.cs" %% "chiseltest" % "0.3.3" % "test"
