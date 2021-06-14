@@ -5,13 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import math
 
-# Generate simple sinus 
-n = 400
-fclk = 4e6
-fsound = 20000
-t = np.arange(n)/fclk
-x = 0.5 + 0.5*np.sin(2*np.pi*fsound*t)
-
 def pdm(values):
     n = len(values)
     pdmval = np.zeros(n)
@@ -25,14 +18,21 @@ def slipping_mean(values, meansize):
     n = len(values)
     meanvals = np.zeros(n+meansize)
     for i in range(n):
-        meanvals[i] = np.mean(x[i-meansize:i])
+        meanvals[i] = np.mean(values[i-meansize:i])
     return meanvals
 
-meansize = 10
-meanvals = slipping_mean(x, meansize)
+# Generate simple sinus 
+n = 400
+fclk = 4e6
+fsound = 20000
+t = np.arange(n)/fclk
+x = 0.5 + 0.5*np.sin(2*np.pi*fsound*t)
 
 # plot pdm signal
 pdmval, error = pdm(x)
+
+meansize = 40 
+meanvals = slipping_mean(pdmval, meansize)
 
 #plt.step(t, error)
 plt.step(t, pdmval)
@@ -42,7 +42,5 @@ plt.plot(t, x)
 halfmeansize = int(meansize/2)
 print(f"halfmeansize {halfmeansize}")
 plt.plot(t, meanvals[halfmeansize:-(halfmeansize)])
-
-
 
 plt.show()
