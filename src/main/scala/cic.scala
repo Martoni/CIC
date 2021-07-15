@@ -80,8 +80,8 @@ class CIC (val width: Int = 16, // output size
       }
     }
 
-    io.pcm.valid := DontCare
-    io.pcm.bits := DontCare
+    io.pcm.valid := dec_pulse
+    io.pcm.bits := comb_reg(N-1)
 }
 
 object CICDriver extends App {
