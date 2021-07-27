@@ -9,18 +9,36 @@ class PDM extends Bundle {
     val data = Bool()
 }
 
-class Pouet(beuh: Int)
+//class CICParam(val N: Int, val R, val M)
+
+//class CICParam(aN: Int, aR: Int, aM: Int){
+//    val N: Int = aN
+//    val R: Int = aR
+//    val M: Int = aM
+
+trait DisplayCICParam {
+  val N: Int; val R: Int; val M: Int
+  def display(): Unit = {
+      println("N = " + N)
+      println("R = " + R)
+      println("M = " + M)
+    }
+}
+
+class CICParam(val N: Int, val R: Int, val M: Int) extends DisplayCICParam
 
 class CIC (val width: Int = 16, // output size
            val rising: Boolean = true,
            val N: Int = 5,      // stage number
            val R: Int = 32,     // decimation factor
            val M: Int = 1)      // Order of the filter (number of samples per stage)
-           extends Module {
+           extends Module with DisplayCICParam {
     val io = IO(new Bundle {
         val pdm = Input(new PDM())
         val pcm = Valid(SInt(width.W))
     })
+
+    display() // display N, R, M parameters values
 
     /* detect pdm_clk edge */
     val  pdm_edge = RegInit(false.B)
@@ -85,6 +103,9 @@ class CIC (val width: Int = 16, // output size
 }
 
 object CICDriver extends App {
+    println("Some scala tests")
+    val cicpar = new CICParam(5, 32, 1)
+    cicpar.display()
     println("Generate CIC verilog")
     (new ChiselStage).emitVerilog(new CIC())
 }
