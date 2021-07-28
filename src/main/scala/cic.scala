@@ -25,7 +25,7 @@ trait DisplayCICParam {
     }
 }
 
-class CICParam(val N: Int, val R: Int, val M: Int) extends DisplayCICParam
+case class CICParam(N: Int, R: Int, M: Int) extends DisplayCICParam
 
 class CIC (val width: Int = 16, // output size
            val rising: Boolean = true,
@@ -102,10 +102,23 @@ class CIC (val width: Int = 16, // output size
     io.pcm.bits := comb_reg(N-1)
 }
 
+object Count {
+  var counter: Int = 0
+  def inc(): Unit = {
+    println("Compteur : " + counter)
+    counter += 1
+  }
+}
+
 object CICDriver extends App {
     println("Some scala tests")
-    val cicpar = new CICParam(5, 32, 1)
+    val cicpar = CICParam(5, 32, 1)
     cicpar.display()
+    println("Compteur")
+    val count1 = Count
+    count1.inc()
+    val count2 = Count
+    count2.inc()
     println("Generate CIC verilog")
     (new ChiselStage).emitVerilog(new CIC())
 }
