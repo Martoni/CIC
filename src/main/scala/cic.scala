@@ -110,6 +110,17 @@ object Count {
   }
 }
 
+class SimpleCounter extends Module {
+  val io = IO(new Bundle {
+    val count = Output(UInt(8.W))
+  })
+
+  val countReg = RegInit(0.U(8.W))
+  countReg := countReg + 1.U
+  io.count := countReg
+}
+
+
 object CICDriver extends App {
     println("Some scala tests")
     val cicpar = CICParam(5, 32, 1)
@@ -121,4 +132,7 @@ object CICDriver extends App {
     count2.inc()
     println("Generate CIC verilog")
     (new ChiselStage).emitVerilog(new CIC())
+
+    println("Generate simple counter example")
+    (new ChiselStage).emitVerilog(new SimpleCounter)
 }
