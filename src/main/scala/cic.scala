@@ -102,37 +102,10 @@ class CIC (val width: Int = 16, // output size
     io.pcm.bits := comb_reg(N-1)
 }
 
-object Count {
-  var counter: Int = 0
-  def inc(): Unit = {
-    println("Compteur : " + counter)
-    counter += 1
-  }
-}
-
-class SimpleCounter extends Module {
-  val io = IO(new Bundle {
-    val count = Output(UInt(8.W))
-  })
-
-  val countReg = RegInit(0.U(8.W))
-  countReg := countReg + 1.U
-  io.count := countReg
-}
-
-
 object CICDriver extends App {
     println("Some scala tests")
     val cicpar = CICParam(5, 32, 1)
     cicpar.display()
-    println("Compteur")
-    val count1 = Count
-    count1.inc()
-    val count2 = Count
-    count2.inc()
     println("Generate CIC verilog")
     (new ChiselStage).emitVerilog(new CIC())
-
-    println("Generate simple counter example")
-    (new ChiselStage).emitVerilog(new SimpleCounter)
 }
