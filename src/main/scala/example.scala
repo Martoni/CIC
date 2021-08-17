@@ -18,7 +18,9 @@ class SimpleCounter extends Module {
   })
 
   val countReg = RegInit(0.U(8.W))
-  countReg := countReg + 1.U
+  val countSum = Wire(UInt(8.W))
+  countSum := countReg + 1.U
+  countReg := countSum
   io.count := countReg
 }
 
