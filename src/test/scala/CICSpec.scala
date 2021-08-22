@@ -13,8 +13,19 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
         println("Open file " + csvpath)
         val fcsv = io.Source.fromFile(csvpath)
         val itcsv = fcsv.getLines()
-        val title_line = itcsv.next().split(',')
-        println()
+        // Get header titles
+        val Array(atime, aclk, adata) = itcsv.next().split(',')
+        println(s"time $atime, clk $aclk, data  $adata")
+
+        // convert csv to (clk,data) iterator
+        val rawsig: Iterator[(Int,Int)] =
+            itcsv.map{ line =>
+                val Array(btime, bclk, bdata) = line.split(',').map(_.trim.toInt)
+                (bclk, bdata)
+            }
         fcsv.close()
+
+        val (cclk, cdata) = rawsig.next()
+        print(s"cclk $cclk, cdata $cdata\n")
     }
 }
