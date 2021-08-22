@@ -21,3 +21,10 @@ Done elaborating.
 [success] Total time: 3 s, completed 16 juil. 2021 07:27:05
 sbt:CIC> 
 ```
+
+## Run tests
+
+```
+$sbt
+sbt:CIC> testOnly cic.BasicTest -- -DwriteVcd=1
+```
