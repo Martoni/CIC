@@ -25,6 +25,5 @@ sbt:CIC>
 ## Run tests
 
 ```
-$sbt
-sbt:CIC> testOnly cic.BasicTest -- -DwriteVcd=1
+$sbt "testOnly cic.BasicTest -- -DwriteVcd=1"
 ```

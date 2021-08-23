@@ -23,8 +23,7 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
         val csvseqsize = csvseq.size
         println(s"$csvpath have $csvseqsize lines")
 
-
-        // convert csv to (clk,data) sequence
+        println("convert csv to (clk,data) sequence")
         val rawsig: Seq[(Int,Int)] = {
             csvseq.map { line =>
                 val Array(btime, bclk, bdata) = line.split(',').map(_.trim.toInt)
@@ -32,7 +31,7 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
             }
         }
 
-        // get pdm bitstream
+        println("get pdm bitstream")
         val pdm: Seq[Int]  = rawsig.zipWithIndex.map {
                 case(a, i) => if(i != 0){ (rawsig(i-1),a) } else ((0,0), a)
             }.filter {
@@ -42,7 +41,6 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
                 case ((_, _), (_, adata)) => adata
                 case _ => 0
             }
-
 
         // test CIC
         test(new CIC()).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
@@ -68,7 +66,6 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
                 }
                 cyclenum += 1
             }
-
         }
         fcsv.close()
     }
