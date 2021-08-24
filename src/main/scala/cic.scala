@@ -84,15 +84,15 @@ class CIC (val c : CICParams = DefaultCICParams,
   }
 
   /* PCM valid */
-  io.pcm.valid := dec_pulse
+  io.pcm.valid := RegNext(dec_pulse)
 }
 
 object CICDriver extends App {
   println("Some scala tests")
-  val c = CICParams(5, 32, 1)
-  print(c)
+  val c = CICParams(5, 68, 1)
+  println(c)
   println("Generate CIC verilog")
   (new ChiselStage).execute(
     Array("-X", "verilog"),
-    Seq(ChiselGeneratorAnnotation(() => new CIC())))
+    Seq(ChiselGeneratorAnnotation(() => new CIC(c=c))))
 }

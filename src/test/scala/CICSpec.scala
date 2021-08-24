@@ -67,12 +67,12 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
                 dut.io.pdm.clk.poke(true.B)
                 if(dut.io.pcm.valid.peek().litValue() == 1){
                     val pcmvalue = dut.io.pcm.bits.peek().litValue()
-                    Stream.continually(pcmFile.write(pcmvalue.toByteArray))
-//                    if(pcmsamples > 1000) {
-//                      break
-//                    }
+                    pcmFile.write(pcmvalue.toByteArray)
+                    if(pcmsamples > 1000) {
+                      break
+                    }
                     pcmsamples += 1
-                    if(pcmsamples % 100 == 0)
+                    if(pcmsamples % 10 == 0)
                       println(s"pcmsamples $pcmsamples -> $pcmvalue")
                 }
                 dut.clock.step(1)
