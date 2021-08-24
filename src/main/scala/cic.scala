@@ -10,7 +10,7 @@ class PDM extends Bundle {
 }
 
 case class CICParams(nStages: Int, decRatio: Int, combDelay: Int){
-  override def toString: String = s"N = $nStages%d, R = $decRatio%d, M = $combDelay%d"
+  override def toString: String = s"N = $nStages, R = $decRatio, M = $combDelay"
 }
 
 object DefaultCICParams extends CICParams(5, 32, 1)
