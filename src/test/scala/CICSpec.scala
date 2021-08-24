@@ -6,6 +6,8 @@ import chisel3._
 
 import chiseltest.experimental.TestOptionBuilder._
 import chiseltest.internal.VerilatorBackendAnnotation
+import scala.util.control.Breaks._
+import java.io._ // for files read/write access
 
 class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
     behavior of "CIC"
@@ -45,7 +47,9 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
 
 
         // test CIC
-        test(new CIC()).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        val pcmFile = new BufferedOutputStream(new FileOutputStream(s"$csvpath.pcm"))
+        //test(new CIC(R=68)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        test(new CIC(R = 68)) { dut =>
             println("begin test")
             // init input
             dut.io.pdm.clk.poke(false.B)
@@ -54,22 +58,27 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
             dut.io.pdm.clk.poke(true.B)
             dut.clock.step(1)
             var cyclenum = 0
-//            val pcmPrintFile = new PrintWriter(new File(s"$csvpath.pcm"))
-            for(data <- pdm) {
-                if(cyclenum % 1000 == 0)
-                    println(s"cyclenum $cyclenum")
+            var pcmsamples = 0
+            breakable {for(data <- pdm) {
                 dut.io.pdm.clk.poke(false.B)
                 dut.io.pdm.data.poke(data.B)
                 dut.clock.step(1)
                 dut.io.pdm.clk.poke(true.B)
-                dut.clock.step(1)
                 if(dut.io.pcm.valid.peek().litValue() == 1){
-                    println(dut.io.pcm.bits.peek().litValue())
+                    val pcmvalue = dut.io.pcm.bits.peek().litValue()
+                    Stream.continually(pcmFile.write(pcmvalue.toByteArray))
+//                    if(pcmsamples > 1000) {
+//                      break
+//                    }
+                    pcmsamples += 1
+                    if(pcmsamples % 100 == 0)
+                      println(s"pcmsamples $pcmsamples -> $pcmvalue")
                 }
+                dut.clock.step(1)
                 cyclenum += 1
-            }
-
+            }}
         }
+        pcmFile.close()
         fcsv.close()
     }
 }
