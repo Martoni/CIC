@@ -41,22 +41,27 @@ class Csv2Np(object):
         for i in range(int(full_size/decimate)):
             alist.append(sum(self.npoutput[i*decimate:(i+1)*decimate]))
         # save as sound
+        fp = open(f"{self.npfilename}.bin", "wb")
         obj = wave.open(f"{self.npfilename}.wav", "w")
         obj.setnchannels(1) # mono
         obj.setsampwidth(2)
         obj.setframerate(sound_sampling)
         for value in alist:
-            data = struct.pack('<h', (value-35)*5000)
+            data = struct.pack('<h', (value-35)*2000)
+            fp.write(data)
             obj.writeframesraw(data)
-        obj.close() 
+        obj.close()
+        fp.close()
 
 
 def usage():
     print("Convert pdm csv captured with pulseview to numpy array")
+    print(" -h, --help                this message")
+    print(" -c, --csv [csvfilename]   give csv")
+    print(" -n, --np [npfilename]     give np filename")
 
 
 if __name__ == "__main__":
-    print("Convert csv to numpy array")
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hc:n:',
                                 ['csv=', 'np=', 'help'])
@@ -85,7 +90,8 @@ if __name__ == "__main__":
         c2n.write_np()
 
     elif (csvfilename is None) and (npfilename is not None):
-        print(f"Filter np file and write sound file {npfilename}.wav")
+        print(f"Filter np file and write sound file {npfilename}.wav," +
+              f"and raw bin file {npfilename}.bin")
         c2n = Csv2Np(csvfilename=None, npfilename=npfilename)
         c2n.read_np()
         c2n.write_sound()
