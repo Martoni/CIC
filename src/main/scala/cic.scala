@@ -2,110 +2,97 @@ package cic
 
 import chisel3._
 import chisel3.util._
-import chisel3.stage.ChiselStage
+import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 
 class PDM extends Bundle {
-    val clk = Bool()
-    val data = Bool()
+  val clk = Bool()
+  val data = Bool()
 }
 
-//class CICParam(val N: Int, val R, val M)
-
-//class CICParam(aN: Int, aR: Int, aM: Int){
-//    val N: Int = aN
-//    val R: Int = aR
-//    val M: Int = aM
-
-trait DisplayCICParam {
-  val N: Int; val R: Int; val M: Int
-  def display(): Unit = {
-      println("N = " + N)
-      println("R = " + R)
-      println("M = " + M)
-    }
+case class CICParams(nStages: Int, decRatio: Int, combDelay: Int){
+  override def toString: String = s"N = $nStages%d, R = $decRatio%d, M = $combDelay%d"
 }
 
-case class CICParam(N: Int, R: Int, M: Int) extends DisplayCICParam
+object DefaultCICParams extends CICParams(5, 32, 1)
 
-class CIC (val width: Int = 16, // output size
-           val rising: Boolean = true,
-           val N: Int = 5,      // stage number
-           val R: Int = 32,     // decimation factor
-           val M: Int = 1)      // Order of the filter (number of samples per stage)
-           extends Module with DisplayCICParam {
-    val io = IO(new Bundle {
-        val pdm = Input(new PDM())
-        val pcm = Valid(SInt(width.W))
-    })
+sealed trait ClockEdge
+case object Rising extends ClockEdge
+case object Falling extends ClockEdge
 
-    display() // display N, R, M parameters values
+class CIC (val c : CICParams = DefaultCICParams,
+           val width: Int = 16, // output size
+           val clkEdge: ClockEdge = Rising //Data valid on clk edge
+          )
+  extends Module {
+  val io = IO(new Bundle {
+    val pdm = Input(new PDM())
+    val pcm = Valid(SInt(width.W))
+  })
 
-    /* detect pdm_clk edge */
-    val  pdm_edge = RegInit(false.B)
-    if(rising) {
-        pdm_edge := io.pdm.clk & (!RegNext(io.pdm.clk))
-    } else {
-        pdm_edge := !io.pdm.clk & RegNext(io.pdm.clk)
-    }
+  println(c) // display parameters values
 
-    /* get pdm bit data */
-    val pdm_bit = RegInit(1.S(width.W))
-    when(pdm_edge) {
-        pdm_bit := Mux(io.pdm.data, 1.S, -1.S)
-    }
+  /* Integrator pulse of one module clock cycle, at specified edge of pdm clock input */
+  val  pdm_pulse = RegNext(clkEdge match {
+    case Rising => io.pdm.clk & (!RegNext(io.pdm.clk))
+    case Falling => !io.pdm.clk & RegNext(io.pdm.clk)
+  }, false.B)
 
+  /* Decimator pulse of one module clock cycle */
+  val (sampleCount, dec_pulse) = Counter(pdm_pulse, c.decRatio)
 
-    /* Integrator stages */
-    val itgr  = RegInit(VecInit(Seq.fill(N){0.S(width.W)}))
-    when(pdm_edge){
-      itgr.zipWithIndex.foreach {
-        case(itgvalue, 0) =>
-          itgr(0) := itgr(0) + pdm_bit
-        case(itgvalue, i) =>
-          itgr(i) := itgr(i) + itgr(i-1)
+  /* CIC implementation */
+
+  /* sample pdm data on pdm_pulse for first integrator stage */
+  val pdm_bit = RegEnable(Mux(io.pdm.data, 1.S, -1.S), 1.S(width.W), pdm_pulse)
+
+  val itgrOutput = {
+    /* Integrator stage definition */
+    def getItgrStage(inp: SInt): SInt = {
+      val itgr  = RegInit(0.S(width.W))
+      when(pdm_pulse)
+      {
+        itgr := itgr + inp
       }
+      itgr
     }
 
-    /* Downsampler */
-   val sampleCount = RegInit(R.U)
-   val dec_pulse = RegInit(false.B)
+    /* integrator stages */
+    val itgr_outputs = Wire(Vec(c.nStages, SInt(width.W)))
 
-   dec_pulse := false.B
-   when(pdm_edge){
-      when(sampleCount === 0.U){
-        sampleCount := R.U
-        dec_pulse := true.B
-      }.otherwise {
-        sampleCount := sampleCount - 1.U
-      }
+    itgr_outputs(0) := getItgrStage(pdm_bit)
+    1 until c.nStages foreach {i=>
+      itgr_outputs(i) := getItgrStage(itgr_outputs(i - 1))
+    }
+    itgr_outputs.reverse.head
+  }
+
+  io.pcm.bits := {
+    /* Comb stage definition */
+    def getCombStage(inp: SInt): SInt = {
+      val delayed_value = ShiftRegister( inp, c.combDelay, 0.S(width.W), dec_pulse)
+      RegEnable(inp - delayed_value, 0.S(width.W), dec_pulse)
     }
 
-    /* Comb filter stages */
-    val comb_reg = RegInit(VecInit(Seq.fill(N){0.S(width.W)}))
-    val delayed_values = RegInit(VecInit(Seq.fill(N){0.S(width.W)}))
-    comb_reg.zipWithIndex.foreach {
-      case(cbreg, 0) => {
-        delayed_values(0) := ShiftRegister(itgr(N-1), M, dec_pulse)
-        when(dec_pulse) {
-          comb_reg(0) := itgr(N-1) - delayed_values(0)
-        }
-      }
-      case(cbreg, i) => {
-        delayed_values(i) := ShiftRegister(comb_reg(i-1), M, dec_pulse)
-        when(dec_pulse) {
-          comb_reg(i) := comb_reg(i-1) - delayed_values(i)
-        }
-      }
-    }
+    /* comb stages */
+    val comb_outputs = Wire(Vec(c.nStages, SInt(width.W)))
 
-    io.pcm.valid := dec_pulse
-    io.pcm.bits := comb_reg(N-1)
+    comb_outputs(0) := getCombStage(itgrOutput)
+    1 until c.nStages foreach {i=>
+      comb_outputs(i) := getCombStage(comb_outputs(i - 1))
+    }
+    comb_outputs.reverse.head
+  }
+
+  /* PCM valid */
+  io.pcm.valid := dec_pulse
 }
 
 object CICDriver extends App {
-    println("Some scala tests")
-    val cicpar = CICParam(5, 32, 1)
-    cicpar.display()
-    println("Generate CIC verilog")
-    (new ChiselStage).emitVerilog(new CIC())
+  println("Some scala tests")
+  val c = CICParams(5, 32, 1)
+  print(c)
+  println("Generate CIC verilog")
+  (new ChiselStage).execute(
+    Array("-X", "verilog"),
+    Seq(ChiselGeneratorAnnotation(() => new CIC())))
 }
