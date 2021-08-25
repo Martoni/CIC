@@ -31,7 +31,7 @@ private:
 
 public:
 
-    SoundMonitor <SData> * m_cic;
+    SoundMonitor <IData> * m_cic;
 
     void init(void) {
         m_pdm->init();
@@ -45,7 +45,7 @@ public:
                          sys_clk_per_ns, PDM_CLK_PER_NS,
                          PDM_SOURCE, PDM_SOURCE);
 
-        m_cic = new SoundMonitor<SData>( &m_core->io_pcm_bits,
+        m_cic = new SoundMonitor<IData>( &m_core->io_pcm_bits,
                                          &m_core->io_pcm_valid,
                                          string("cic.raw"));
 
