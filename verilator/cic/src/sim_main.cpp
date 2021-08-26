@@ -161,7 +161,7 @@ int main(int argc, char** argv, char** env) {
 
     tb->time_pass_us(10);
     
-    int ms10 = 100;
+    int ms10 = 500;
     cout << "Simulating " << ms10*10 << " ms" << endl;
     for(int i=0; i < ms10; i++){
         tb->time_pass_ms(10);
