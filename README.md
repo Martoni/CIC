@@ -25,5 +25,5 @@ sbt:CIC>
 ## Run tests
 
 ```
-$sbt "testOnly cic.BasicTest -- -DwriteVcd=1"
+$sbt -mem 16384 "testOnly cic.BasicTest -- -DwriteVcd=1"
 ```
