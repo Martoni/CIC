@@ -18,11 +18,10 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
         println("Open file " + pdmpath)
         val bis = new BufferedInputStream(new FileInputStream(pdmpath))
         val pdm = Stream.continually(bis.read).takeWhile(-1 != _).map(_.toByte).toArray
-        bis.close
+        val pcmFile = new BufferedOutputStream(new FileOutputStream(s"$pdmpath.pcm"))
 
         // test CIC
         object MyCICParams extends CICParams(3, 68, 1)
-        val pcmFile = new BufferedOutputStream(new FileOutputStream(s"$pdmpath.pcm"))
         test(new CIC(c=MyCICParams)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
         //test(new CIC(c=MyCICParams)) { dut =>
             println("begin test")
@@ -53,5 +52,6 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
             }}
         }
         pcmFile.close()
+        bis.close
     }
 }
