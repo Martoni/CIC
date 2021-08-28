@@ -50,53 +50,52 @@ class CIC (val c : CICParams = DefaultCICParams,
     case Falling => !io.pdm.clk & RegNext(io.pdm.clk)
   }, false.B)
 
-  /* Decimator pulse of one module clock cycle */
-  val (sampleCount, dec_pulse) = Counter(pdm_pulse, c.decRatio)
-
   /* CIC implementation */
 
   /* sample pdm data on pdm_pulse for first integrator stage */
   val pdm_bit = RegEnable(Mux(io.pdm.data, 1.S, -1.S), 1.S(regSize.W), pdm_pulse)
 
-  val itgrOutput = {
-    /* Integrator stage definition */
-    def getItgrStage(inp: SInt): SInt = {
-      val itgr  = RegInit(0.S(regSize.W))
-      when(pdm_pulse)
-      {
-        itgr := itgr + inp
-      }
-      itgr
+  /* Integrator stage definition */
+  def getItgrStage(inp: SInt): SInt = {
+    val itgr  = RegInit(0.S(regSize.W))
+    when(pdm_pulse)
+    {
+      itgr := itgr + inp
     }
-
-    /* integrator stages */
-    val itgr_outputs = Wire(Vec(c.nStages, SInt(regSize.W)))
-
-    itgr_outputs(0) := getItgrStage(pdm_bit)
-    1 until c.nStages foreach {i=>
-      itgr_outputs(i) := getItgrStage(itgr_outputs(i - 1))
-    }
-    itgr_outputs.reverse.head
+    itgr
   }
 
-  io.pcm.bits := {
-    /* Comb stage definition */
-    def getCombStage(inp: SInt): SInt = {
-      val delayed_value = ShiftRegister( inp, c.combDelay, 0.S(regSize.W), dec_pulse)
-      RegEnable(inp - delayed_value, 0.S(regSize.W), dec_pulse)
-    }
+  /* integrator stages */
+  val itgr_outputs = Wire(Vec(c.nStages, SInt(regSize.W)))
 
-    /* comb stages */
-    val comb_outputs = Wire(Vec(c.nStages, SInt(regSize.W)))
+  itgr_outputs(0) := getItgrStage(pdm_bit)
+  1 until c.nStages foreach {i=>
+    itgr_outputs(i) := getItgrStage(itgr_outputs(i - 1))
+  }
+  val itgrOutput = itgr_outputs.reverse.head
 
-    comb_outputs(0) := getCombStage(itgrOutput)
-    1 until c.nStages foreach {i=>
-      comb_outputs(i) := getCombStage(comb_outputs(i - 1))
-    }
-    comb_outputs.reverse.head
+  /* Decimator pulse of one module clock cycle */
+  //val tupleCount = Counter(pdm_pulse, c.decRatio)
+  //val sampleCount = tupleCount._1
+  //val dec_pulse = tupleCount._2
+  val (sampleCount, dec_pulse) = Counter(pdm_pulse, c.decRatio)
+
+  /* Comb stage definition */
+  def getCombStage(inp: SInt): SInt = {
+    val delayed_value = ShiftRegister(inp, c.combDelay, 0.S(regSize.W), dec_pulse)
+    RegEnable(inp - delayed_value, 0.S(regSize.W), dec_pulse)
   }
 
-  /* PCM valid */
+  /* comb stages */
+  val comb_outputs = Wire(Vec(c.nStages, SInt(regSize.W)))
+
+  comb_outputs(0) := getCombStage(itgrOutput)
+  1 until c.nStages foreach {i=>
+    comb_outputs(i) := getCombStage(comb_outputs(i - 1))
+  }
+
+  /* output */
+  io.pcm.bits := comb_outputs.reverse.head
   io.pcm.valid := RegNext(dec_pulse)
 }
 
