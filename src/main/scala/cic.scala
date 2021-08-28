@@ -10,7 +10,18 @@ class PDM extends Bundle {
   val data = Bool()
 }
 
-case class CICParams(nStages: Int, decRatio: Int, combDelay: Int){
+trait DisplayCICParam {
+  val nStages: Int; val decRatio: Int; val combDelay: Int
+  def display(): Unit = {
+      println("N = " + N)
+      println("R = " + R)
+      println("M = " + M)
+    }
+}
+
+case class CICParams(nStages: Int,
+                     decRatio: Int,
+                     combDelay: Int) extends DisplayCICParam {
   override def toString: String = s"N = $nStages, R = $decRatio, M = $combDelay"
 }
 
