@@ -13,9 +13,9 @@ class PDM extends Bundle {
 trait DisplayCICParam {
   val nStages: Int; val decRatio: Int; val combDelay: Int
   def display(): Unit = {
-      println("N = " + N)
-      println("R = " + R)
-      println("M = " + M)
+      println("N = " + nStages)
+      println("R = " + decRatio)
+      println("M = " + combDelay)
     }
 }
 
