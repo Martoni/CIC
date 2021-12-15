@@ -6,7 +6,7 @@ import chisel3.stage.{ChiselGeneratorAnnotation, ChiselStage}
 import scala.math.pow
 
 class PDM extends Bundle {
-  val clk = Bool()
+  val clock = Bool()
   val data = Bool()
 }
 
@@ -46,8 +46,8 @@ class CIC (val c : CICParams = DefaultCICParams,
 
   /* Integrator pulse of one module clock cycle, at specified edge of pdm clock input */
   val  pdm_pulse = RegNext(clkEdge match {
-    case Rising => io.pdm.clk & (!RegNext(io.pdm.clk))
-    case Falling => !io.pdm.clk & RegNext(io.pdm.clk)
+    case Rising => io.pdm.clock & (!RegNext(io.pdm.clock))
+    case Falling => !io.pdm.clock & RegNext(io.pdm.clock)
   }, false.B)
 
   /* CIC implementation */

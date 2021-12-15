@@ -43,18 +43,18 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
         //test(new CIC(c=MyCICParams)) { dut =>
             println("begin test")
             // init input
-            dut.io.pdm.clk.poke(false.B)
+            dut.io.pdm.clock.poke(false.B)
             dut.io.pdm.data.poke(false.B)
             dut.clock.step(1)
-            dut.io.pdm.clk.poke(true.B)
+            dut.io.pdm.clock.poke(true.B)
             dut.clock.step(1)
             var cyclenum = 0
             var pcmsamples = 0
             breakable{for(data <- pdm) {
-                dut.io.pdm.clk.poke(false.B)
+                dut.io.pdm.clock.poke(false.B)
                 dut.io.pdm.data.poke(data.B)
                 dut.clock.step(1)
-                dut.io.pdm.clk.poke(true.B)
+                dut.io.pdm.clock.poke(true.B)
                 if(dut.io.pcm.valid.peek().litValue() == 1){
                     val pcmvalue = dut.io.pcm.bits.peek().litValue()
                     val pcmarray = pcmvalue.toByteArray
