@@ -4,8 +4,6 @@ import org.scalatest._
 import chiseltest._
 import chisel3._
 
-import chiseltest.experimental.TestOptionBuilder._
-import chiseltest.internal.VerilatorBackendAnnotation
 import scala.util.control.Breaks._
 import java.io._ // for files read/write access
 import scala.util.Random
@@ -39,7 +37,7 @@ class BasicTest extends FlatSpec with ChiselScalatestTester with Matchers {
 
         // test CIC
         object MyCICParams extends CICParams(3, 68, 1)
-        test(new CIC(c=MyCICParams)).withAnnotations(Seq(VerilatorBackendAnnotation)) { dut =>
+        test(new CIC(c=MyCICParams)) { dut =>
         //test(new CIC(c=MyCICParams)) { dut =>
             println("begin test")
             // init input
