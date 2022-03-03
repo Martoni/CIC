@@ -8,8 +8,8 @@ lazy val root = (project in file("."))
   .settings(
     name := "cic",
     libraryDependencies ++= Seq(
-      "edu.berkeley.cs" %% "chisel3" % "3.5.0-RC1",
-      "edu.berkeley.cs" %% "chiseltest" % "0.5-SNAPSHOT",
+      "edu.berkeley.cs" %% "chisel3" % "3.5.1",
+      "edu.berkeley.cs" %% "chiseltest" % "0.5.1",
     ),
     scalacOptions ++= Seq(
       "-Xsource:2.11",
@@ -18,7 +18,7 @@ lazy val root = (project in file("."))
       "-feature",
       "-Xcheckinit",
     ),
-    addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % "3.5.0-RC1" cross CrossVersion.full),
+    addCompilerPlugin("edu.berkeley.cs" % "chisel3-plugin" % "3.5.1" cross CrossVersion.full),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )
 

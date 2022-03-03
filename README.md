@@ -24,40 +24,25 @@ sbt:CIC>
 
 ## Run tests
 
-### prerequisite
+### Prepare assets
 
-To run tests, SNAPSHOT version of chisel3 is required :
+- First unflat sample file :
 
-- Chisel3:
-
-```
-git clone https://github.com/chipsalliance/chisel3.git
-cd chisel3
-sbt publishLocal
+```Shell
+$ cd assets/
+$ xz -d colamonptitfrere_12.5Ms.csv.xz
 ```
 
-- firrtl:
+- then convert it to numpy data format :
 
-```
-git clone https://github.com/chipsalliance/firrtl.git
-cd firrtl
-sbt publishLocal
+```Shell
+$  python ../toolbox/csv2np.py --csv=colamonptitfrere_12.5Ms.csv --np=colamonptitfrere_12.5Ms
 ```
 
-- Treadle:
+- and finally to pdm data format :
 
-```
-git clone https://github.com/chipsalliance/treadle.git
-cd treadle
-sbt publishLocal
-```
-
-- chiseltest:
-
-```
-git clone https://github.com/ucb-bar/chisel-testers2.git
-cd chisel-testers2
-sbt publishLocal
+```Shell
+$ python ../toolbox/csv2np.py --np=colamonptitfrere_12.5Ms.npy --pdm=colamonptitfrere_12.5Ms.pdm
 ```
 
 ### Launch test
